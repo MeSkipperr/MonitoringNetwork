@@ -91,4 +91,13 @@ const listIPTV = [
         },
 ];
 
+// Template
+// const listIPTV = [
+//         {
+//             name: "Network Ip",
+//             ipAddress: "8.8.8.8",
+//             switchDevice: "Network",
+//             error: false 
+//         },
+// ]
 module.exports = listIPTV
