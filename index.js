@@ -43,8 +43,15 @@ function pingAddress(data) {
             const lines = fileData.trim().split('\n');
             const lastFiveLines = lines.slice(-5);
 
+            const isFailure = (line) => {
+                return (
+                    line.includes('Destination host unreachable') ||
+                    !line.startsWith('Reply from')
+                );
+            };
+
             // Check if all the last 5 ping responses are failures (no reply from server)
-            const allNoReply = lastFiveLines.every(result => !result.startsWith('Reply from'));
+            const allNoReply = lastFiveLines.every(isFailure);
 
             // If all last 5 pings failed, mark the error and send an email
             if (allNoReply) {
