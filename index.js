@@ -8,63 +8,71 @@ const cron = require("node-cron"); // For scheduling tasks at specific intervals
 const networkData = require("./networkData");
 
 // Import functions to send error and log emails
-const sendErrorEmail = require("./sendErrorEmail");
-const sendLogToEmail = require("./sendLogToEmail");
+const sendErrorEmail = require("./email/sendErrorEmail");
+const sendRecoveryEmail = require("./email/sendRecovery");
+const sendLogToEmail = require("./email/sendLogToEmail");
 
 // Function to ping an IPTV address and handle the response
 async function pingAddress(data) {
-  // Execute the ping command to check if the IPTV server is reachable
-  exec(`ping ${data.ipAddress} -n 1`, async (error, stdout, stderr) => {
-    try {
-      // Split the output by newlines to examine the ping response
-      const outputLines = stdout.split("\r\n");
-      // The log message is the third line, or 'Request timed out.' if no reply
-      const logMessage = outputLines[2] || "Request timed out.";
-      console.log(logMessage); // Log the result to the console
+    const lineNetwork = 5;
 
-      // Define the path for the log file (one file per IPTV entry)
-      const filePath = path.join(__dirname, "log", `${data.name}.txt`);
+    // Execute the ping command to check if the IPTV server is reachable
+    exec(`ping ${data.ipAddress} -n 1`, async (error, stdout, stderr) => {
+        try {
+            // Split the output by newlines to examine the ping response
+            const outputLines = stdout.split("\r\n");
+            // The log message is the third line, or 'Request timed out.' if no reply
+            const logMessage = outputLines[2] || "Request timed out.";
+            console.log(logMessage); // Log the result to the console
 
-      // Append the log message to the corresponding log file
-      await fs.promises.appendFile(filePath, logMessage + "\n");
+            // Define the path for the log file (one file per IPTV entry)
+            const filePath = path.join(__dirname, "log", `${data.name}.txt`);
 
-      // Read the content of the log file to analyze the last few ping responses
-      const fileData = await fs.promises.readFile(filePath, "utf8");
+            // Append the log message to the corresponding log file
+            await fs.promises.appendFile(filePath, logMessage + "\n");
 
-      // Split the file data into lines and get the last 5 lines for review
-      const lines = fileData.trim().split("\n");
-      const lastFiveLines = lines.slice(-5);
+            // Read the content of the log file to analyze the last few ping responses
+            const fileData = await fs.promises.readFile(filePath, "utf8");
 
-      const isFailure = (line) => {
-        return (
-          line.includes("Destination host unreachable") ||
-          !line.startsWith("Reply from")
-        );
-      };
+            // Split the file data into lines and get the last 5 lines for review
+            const lines = fileData.trim().split("\n");
+            const lastFiveLines = lines.slice(-lineNetwork);
 
-      // Check if all the last 5 ping responses are failures (no reply from server)
-      const allNoReply = lastFiveLines.every(isFailure);
+            const isFailure = (line) => {
+                return (
+                    line.includes("Destination host unreachable") ||
+                    !line.startsWith("Reply from")
+                );
+            };
 
-      // If all last 5 pings failed, mark the error and send an email
-      if (allNoReply) {
-        if (data.error !== true) {
-          // Only trigger if error status is not already set
-          data.error = true; // Mark the IPTV entry as having an error
-          await sendErrorEmail(data); // Send error email notification
+            const allNoReply = lastFiveLines.every(isFailure);
+            const allSuccess = lastFiveLines.every(
+                (line) =>
+                    line.startsWith("Reply from") &&
+                    !line.includes("Destination host unreachable")
+            );
+
+            if (allNoReply) {
+                if (data.error !== true) {
+                    data.error = true; // Mark as error
+                    sendErrorEmail(data)
+                }
+            } else if (allSuccess) {
+                if (data.error === true) {
+                    data.error = false; // Reset error
+                    sendRecoveryEmail(data) // Send recovery email notification
+                }
+            }
+        } catch (err) {
+            console.error("An error occurred:", err); // Log any errors during execution
         }
-      } else {
-        data.error = false; // Reset error flag if the server is responding
-      }
-    } catch (err) {
-      console.error("An error occurred:", err); // Log any errors during execution
-    }
-  });
+    });
 }
 
 // Schedule a task to send log emails every Monday at 9 AM
 cron.schedule("0 9 * * 1", () => {
-  console.log("Sending email every Monday at 9 AM");
-  sendLogToEmail(); // Trigger the log email function
+    console.log("Sending email every Monday at 9 AM");
+    sendLogToEmail(); // Trigger the log email function
 });
 
 // Set an interval to ping all IPTV addresses every second

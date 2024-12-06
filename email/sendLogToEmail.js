@@ -4,10 +4,10 @@ const fs = require("fs"); // For interacting with the file system (used for file
 const path = require("path"); // For handling file paths in a cross-platform way
 
 // Import example data (IPTV switches list and user details)
-const networkData = require("./networkData"); // List of IPTV switches
+const networkData = require("../networkData"); // List of IPTV switches
 // Import user data (list of users to send emails to)
-const recipient = require("./auth/recipient");
-const sender = require("./auth/sender");
+const recipient = require("../auth/recipient");
+const sender = require("../auth/sender");
 
 // Configure the email transporter using Gmail service
 const transporter = nodemailer.createTransport({
