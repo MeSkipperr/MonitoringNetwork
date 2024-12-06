@@ -10,7 +10,7 @@
 // node "C:/your/path/folder/index.js"
 
 
-const listIPTV = [
+const networkData = [
         {
             name: "DPSCYSW01-IPTV-MB-SR",
             ipAddress: "192.168.99.254",
@@ -92,7 +92,7 @@ const listIPTV = [
 ];
 
 // Template
-// const listIPTV = [
+// const networkData = [
 //         {
 //             name: "Network Ip",
 //             ipAddress: "8.8.8.8",
@@ -100,4 +100,4 @@ const listIPTV = [
 //             error: false 
 //         },
 // ]
-module.exports = listIPTV
+module.exports = networkData

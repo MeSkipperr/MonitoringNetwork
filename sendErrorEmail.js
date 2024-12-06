@@ -4,27 +4,28 @@ require('dotenv').config(); // For loading environment variables from a .env fil
 const path = require('path'); // For handling file paths
 
 // Import user data (list of users to send emails to)
-const users = require("./user");
+const recipient = require("./auth/recipient");
+const sender = require("./auth/sender");
 
 // Configure the email transporter using Gmail service
 const transporter = nodemailer.createTransport({
     service: 'gmail', // Using Gmail as the email service
     auth: {
-        user: process.env.EMAIL_USER, // Your email user from the .env file
-        pass: process.env.EMAIL_PASS  // Your email password from the .env file
+        user: sender.EMAIL_USER, 
+        pass: sender.EMAIL_PASS
     }
 });
 
 // Function to send an error notification email
-function sendErrorEmail(data) {
+async function sendErrorEmail(data) {
     // Iterate through each user to send the error notification
-    users.forEach(user => {
+    for (const user of recipient) {
         // Define the path to the log file associated with the IPTV error
         const filePath = path.join(__dirname, 'log', `${data.name}.txt`);
 
         // Configure the email options
         const mailOptions = {
-            from: process.env.EMAIL_USER, // Sender's email (from .env)
+            from: sender.EMAIL_USER, // Sender's email (from .env)
             to: user.email, // Recipient's email (from the user data)
             subject: 'Switch IPTV Ping Error Notification', // Email subject
             text: `
@@ -39,7 +40,7 @@ We would like to inform you that an error has occurred in the network system. Be
 Kindly review the information provided and take necessary actions to resolve the issue at your earliest convenience.
 
 Best regards,
-Your Company
+Courtyard by Marriott Bali Nusa Dua Resort
             `, // Email body with personalized information
             attachments: {
                 filename: `${data.name}.txt`, // Attach the log file with the error details
@@ -47,16 +48,14 @@ Your Company
             }
         };
 
-        // Send the email with the defined options
-        transporter.sendMail(mailOptions, (err, info) => {
-            if (err) {
-                console.error('Failed to send email:', err); // Log error if sending fails
-            } else {
-                console.log('Email sent:', info.response); // Log success response if email is sent
-            }
-        });
-    });
+        try {
+            // Send the email with the defined options
+            const info = await transporter.sendMail(mailOptions);
+            console.log('Email sent:', info.response); // Log success response if email is sent
+        } catch (err) {
+            console.error('Failed to send email to:', user.email, 'Error:', err); // Log error if sending fails
+        }
+    }
 }
-
 // Export the sendErrorEmail function so it can be used in other modules
 module.exports = sendErrorEmail;

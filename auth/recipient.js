@@ -1,5 +1,5 @@
 // This is the array of users who will receive the email notifications
-const users = [
+const recipient = [
     {
         middleName : "",
         lastName : "",
@@ -7,4 +7,4 @@ const users = [
     },
 ]
 
-module.exports = users
+module.exports = recipient 
