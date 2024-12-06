@@ -28,7 +28,7 @@ async function sendErrorEmail(data) {
     const mailOptions = {
       from: sender.EMAIL_USER, // Sender's email (from .env)
       to: user.email, // Recipient's email (from the user data)
-      subject: "Switch IPTV Ping Error Notification", // Email subject
+      subject: "Switch Ping Error Notification", // Email subject
       text: `
 Dear ${user.middleName} ${user.lastName},
 

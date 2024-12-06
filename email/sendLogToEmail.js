@@ -37,7 +37,7 @@ const sendLogToEmail = async () => {
     const mailOptions = {
       from: sender.EMAIL_USER, // Sender's email (from the environment variable)
       to: user.email, // Recipient's email (from the user data)
-      subject: "Weekly Switch IPTV Log", // Email subject
+      subject: "Weekly Switch Log", // Email subject
       text: `
 Dear ${user.middleName} ${user.lastName},
 

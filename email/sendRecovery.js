@@ -28,7 +28,7 @@ async function sendRecoveryEmail(data) {
         const mailOptions = {
             from: sender.EMAIL_USER, // Sender's email (from .env)
             to: user.email, // Recipient's email (from the user data)
-            subject: "Switch IPTV Ping Recovery Notification", // Email subject
+            subject: "Switch Ping Recovery Notification", // Email subject
             text: `
 Dear ${user.middleName} ${user.lastName},
 
