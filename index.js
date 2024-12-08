@@ -26,7 +26,7 @@ async function pingAddress(data) {
             console.log(logMessage); // Log the result to the console
 
             // Define the path for the log file (one file per IPTV entry)
-            const filePath = path.join(__dirname, "log", `${data.name}.txt`);
+            const filePath = path.join(__dirname, "email/log", `${data.name}.txt`);
 
             // Append the log message to the corresponding log file
             await fs.promises.appendFile(filePath, logMessage + "\n");
