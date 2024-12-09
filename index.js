@@ -11,6 +11,7 @@ const networkData = require("./networkData");
 const sendErrorEmail = require("./email/sendErrorEmail");
 const sendRecoveryEmail = require("./email/sendRecovery");
 const sendLogToEmail = require("./email/sendLogToEmail");
+const formatDate = require("./timeFormat");
 
 // Function to ping an IPTV address and handle the response
 async function pingAddress(data) {
@@ -22,7 +23,7 @@ async function pingAddress(data) {
             // Split the output by newlines to examine the ping response
             const outputLines = stdout.split("\r\n");
             // The log message is the third line, or 'Request timed out.' if no reply
-            const logMessage = outputLines[2] || "Request timed out.";
+            const logMessage = `${outputLines[2]} - ${formatDate()}` || "Request timed out.";
             console.log(logMessage); // Log the result to the console
 
             // Define the path for the log file (one file per IPTV entry)
