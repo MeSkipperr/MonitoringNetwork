@@ -89,6 +89,36 @@ const networkData = [
             switchDevice: "Aruba 6100 24G 4SFP Switch",
             error: false 
         },
+    {
+        name: "Network Video Recorder 1",
+        ipAddress: "172.17.0.241",
+        switchDevice: "Network Video Recorder",
+        error: false 
+    },
+    {
+        name: "Network Video Recorder 2",
+        ipAddress: "172.17.0.242",
+        switchDevice: "Network Video Recorder",
+        error: false 
+    },
+    {
+        name: "Network Video Recorder 3",
+        ipAddress: "172.17.0.243",
+        switchDevice: "Network Video Recorder",
+        error: false 
+    },
+    {
+        name: "Network Video Recorder 4",
+        ipAddress: "172.17.0.244",
+        switchDevice: "Network Video Recorder",
+        error: false 
+    },
+    {
+        name: "Network Video Recorder 5",
+        ipAddress: "172.17.0.245",
+        switchDevice: "Network Video Recorder",
+        error: false 
+    },
 ];
 
 // Template
