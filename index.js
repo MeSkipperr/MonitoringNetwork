@@ -38,7 +38,7 @@ async function pingAddress(data) {
 
         // Buat log message
         const logMessage = `${res.alive ? `Reply from ${data.ipAddress}` : "Request timed out."
-            } - ${formatDate()}`;
+            } - ${formatDate()} - ${data.ipAddress}`;
         console.log(logMessage);
 
         // Tambahkan log ke file log
