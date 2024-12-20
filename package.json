@@ -4,7 +4,8 @@
     "fs": "^0.0.1-security",
     "googleapis": "^144.0.0",
     "node-cron": "^3.0.3",
-    "nodemailer": "^6.9.16"
+    "nodemailer": "^6.9.16",
+    "ping": "^0.4.4"
   },
   "name": "monitoring-network",
   "version": "1.0.0",

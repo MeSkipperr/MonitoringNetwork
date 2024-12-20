@@ -2,7 +2,7 @@ const { google } = require("googleapis");
 const nodemailer = require("nodemailer");
 const fs = require("fs");
 const path = require("path");
-const networkData = require("../networkData");
+const ipTV = require("../device/ipTV");
 const recipient = require("../auth/recipient");
 const sender = require("../auth/sender");
 
@@ -121,14 +121,17 @@ const uploadFilesToDriveFolder = async (folderName, files) => {
 const sendLogToEmail = async () => {
   try {
     // Define files to upload
-    const files = networkData.map((data) => ({
+    const files = ipTV.map((data) => ({
       path: path.join(__dirname, "log", `${data.name}.txt`),
       name: `${data.name}.txt`,
     }));
 
     // Upload files to a single folder
     const folderName = "Switch Weekly Logs ";
-    const { folderId, uploadedFiles } = await uploadFilesToDriveFolder(folderName, files);
+    const { folderId, uploadedFiles } = await uploadFilesToDriveFolder(
+      folderName,
+      files
+    );
 
     // Get the folder link
     const folderLink = `https://drive.google.com/drive/folders/${folderId}`;

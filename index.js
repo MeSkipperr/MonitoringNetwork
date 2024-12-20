@@ -1,82 +1,90 @@
-// Import necessary dependencies
-const { exec } = require("child_process"); // To execute system commands like 'ping'
-const fs = require("fs"); // To interact with the file system (reading/writing files)
-const path = require("path"); // For handling and transforming file paths
-const cron = require("node-cron"); // For scheduling tasks at specific intervals
+const ping = require("ping"); // Modul ringan untuk ping
+const fs = require("fs"); // Untuk interaksi file sistem
+const path = require("path"); // Untuk manipulasi path file
+const cron = require("node-cron"); // Untuk penjadwalan tugas
 
-// Import the list of IPTV addresses to ping
-const networkData = require("./networkData");
+const ipTV = require("./device/ipTV");
+const cctv = require("./device/cctv")
 
-// Import functions to send error and log emails
 const sendErrorEmail = require("./email/sendErrorEmail");
 const sendRecoveryEmail = require("./email/sendRecovery");
 const sendLogToEmail = require("./email/sendLogToEmail");
 const formatDate = require("./timeFormat");
 
-// Function to ping an IPTV address and handle the response
-async function pingAddress(data) {
-    const lineNetwork = 5;
+// Cache untuk menghindari pengiriman email berulang
+const emailCooldown = new Map();
 
-    // Execute the ping command to check if the IPTV server is reachable
-    exec(`ping ${data.ipAddress} -n 1`, async (error, stdout, stderr) => {
-        try {
-            // Split the output by newlines to examine the ping response
-            const outputLines = stdout.split("\r\n");
-            // The log message is the third line, or 'Request timed out.' if no reply
-            const logMessage = `${outputLines[2]} - ${formatDate()}` || "Request timed out.";
-            console.log(logMessage); // Log the result to the console
+// Helper untuk throttle email pengiriman
+function shouldSendEmail(data, type) {
+    const key = `${data.name}-${type}`;
+    const now = Date.now();
+    const lastSent = emailCooldown.get(key) || 0;
 
-            // Define the path for the log file (one file per IPTV entry)
-            const filePath = path.join(__dirname, "email/log", `${data.name}.txt`);
-
-            // Append the log message to the corresponding log file
-            await fs.promises.appendFile(filePath, logMessage + "\n");
-
-            // Read the content of the log file to analyze the last few ping responses
-            const fileData = await fs.promises.readFile(filePath, "utf8");
-
-            // Split the file data into lines and get the last 5 lines for review
-            const lines = fileData.trim().split("\n");
-            const lastFiveLines = lines.slice(-lineNetwork);
-
-            const isFailure = (line) => {
-                return (
-                    line.includes("Destination host unreachable") ||
-                    !line.startsWith("Reply from")
-                );
-            };
-
-            const allNoReply = lastFiveLines.every(isFailure);
-            const allSuccess = lastFiveLines.every(
-                (line) =>
-                    line.startsWith("Reply from") &&
-                    !line.includes("Destination host unreachable")
-            );
-
-            if (allNoReply) {
-                if (data.error !== true) {
-                    data.error = true; // Mark as error
-                    sendErrorEmail(data)
-                }
-            } else if (allSuccess) {
-                if (data.error === true) {
-                    data.error = false; // Reset error
-                    sendRecoveryEmail(data) // Send recovery email notification
-                }
-            }
-        } catch (err) {
-            console.error("An error occurred:", err); // Log any errors during execution
-        }
-    });
+    if (now - lastSent > 30000) {
+        // 30 detik cooldown
+        emailCooldown.set(key, now);
+        return true;
+    }
+    return false;
 }
 
-// Schedule a task to send log emails every Monday at 9 AM
-cron.schedule("0 9 * * 1", () => {
-    console.log("Sending email every Monday at 9 AM");
-    sendLogToEmail(); // Trigger the log email function
-});
+// Fungsi untuk mem-ping alamat IPTV
+async function pingAddress(data) {
+    const lineNetwork = 5;
+    const filePath = path.join(__dirname, "email/log", `${data.name}.txt`);
 
-// Set an interval to ping all IPTV addresses every second
-setInterval(() => {
-    networkData.forEach(pingAddress); // Iterate over the IPTV list and ping each address
-}, 1000); // Run the ping task every 1000 milliseconds (1 second)
+    try {
+        // Ping alamat menggunakan modul `ping`
+        const res = await ping.promise.probe(data.ipAddress, { timeout: 1 });
+
+        // Buat log message
+        const logMessage = `${res.alive ? `Reply from ${data.ipAddress}` : "Request timed out."
+            } - ${formatDate()}`;
+        console.log(logMessage);
+
+        // Tambahkan log ke file log
+        await fs.promises.appendFile(filePath, logMessage + "\n");
+
+        // Baca file log terakhir (opsional, jika analisis diperlukan)
+        const fileData = await fs.promises.readFile(filePath, "utf8");
+        const lines = fileData.trim().split("\n");
+        const lastFiveLines = lines.slice(-lineNetwork);
+
+        // Analisis apakah semua gagal atau berhasil
+        const allNoReply = lastFiveLines.every(
+            (line) => !line.startsWith("Reply from")
+        );
+        const allSuccess = lastFiveLines.every((line) =>
+            line.startsWith("Reply from")
+        );
+
+        // Kirim email jika status berubah
+        if (allNoReply && shouldSendEmail(data, "error")) {
+            sendErrorEmail(data); // Kirim email error
+            data.error = true;
+        } else if (allSuccess && shouldSendEmail(data, "recovery")) {
+            sendRecoveryEmail(data); // Kirim email recovery
+            data.error = false;
+        }
+    } catch (err) {
+        console.error(`Ping error for ${data.name}:`, err);
+    }
+}
+
+// Batch dan interval ping
+const batchPing = async () => {
+    // console.log("Starting ping batch...");
+    const allDevices = [...cctv, ...ipTV]; // Atau gunakan cctv.concat(ipTV)
+    const pingPromises = allDevices.map(pingAddress);
+    await Promise.all(pingPromises); // Tunggu semua selesai
+    // console.log("Batch complete.");
+};
+
+// Jadwalkan ping setiap 10 detik
+setInterval(batchPing, 60000); // Ping semua alamat IPTV setiap 60 detik
+
+// Penjadwalan untuk mengirim email log setiap Senin pukul 9 pagi
+cron.schedule("0 9 * * 1", () => {
+    console.log("Sending log email every Monday at 9 AM...");
+    sendLogToEmail();
+});
