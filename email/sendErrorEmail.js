@@ -28,7 +28,7 @@ async function sendErrorEmail(data) {
     const mailOptions = {
       from: sender.EMAIL_USER, // Sender's email (from .env)
       to: user.email, // Recipient's email (from the user data)
-      subject: "device Ping Error Notification", // Email subject
+      subject: "Device Ping Error Notification", // Email subject
       text: `
 Dear ${user.middleName} ${user.lastName},
 
@@ -38,7 +38,7 @@ We would like to inform you that an error has occurred in the network system. Be
     - Switch Name: ${data.name}
     - IP Address: ${data.ipAddress}
     - Switch device: ${data.device}
-    - Descriptions :  ${data.description}
+    ${data.description.trim() === "" ? "" : `- Descriptions : ${data.description} `}
 
 Kindly review the information provided and take necessary actions to resolve the issue at your earliest convenience.
 

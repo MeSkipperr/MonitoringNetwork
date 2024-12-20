@@ -28,7 +28,7 @@ async function sendRecoveryEmail(data) {
     const mailOptions = {
       from: sender.EMAIL_USER, // Sender's email (from .env)
       to: user.email, // Recipient's email (from the user data)
-      subject: "device Ping Recovery Notification", // Email subject
+      subject: "Device Ping Recovery Notification", // Email subject
       text: `
 Dear ${user.middleName} ${user.lastName},
 
@@ -38,7 +38,7 @@ This is to notify you of a network system recovery update. Below are the recover
     - Switch Name: ${data.name}
     - IP Address: ${data.ipAddress}
     - Switch device: ${data.device}
-    = Descriptions :  ${data.description}
+    ${data.description.trim() === "" ? "" : `- Descriptions : ${data.description} `}
 
 Inspect the details and confirm the system is back to normal.
 

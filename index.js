@@ -8,7 +8,6 @@ const cctv = require("./device/cctv")
 
 const sendErrorEmail = require("./email/sendErrorEmail");
 const sendRecoveryEmail = require("./email/sendRecovery");
-const sendLogToEmail = require("./email/sendLogToEmail");
 const formatDate = require("./timeFormat");
 
 // Cache untuk menghindari pengiriman email berulang
@@ -80,11 +79,34 @@ const batchPing = async () => {
     // console.log("Batch complete.");
 };
 
-// Jadwalkan ping setiap 10 detik
+const clearLogFolder = () => {
+    const logFolder = "./email/log/";
+
+    fs.readdir(logFolder, (err, files) => {
+    if (err) {
+        console.error("Error reading log folder:", err);
+        return;
+    }
+
+    files.forEach((file) => {
+        const filePath = path.join(logFolder, file);
+
+        fs.unlink(filePath, (err) => {
+        if (err) {
+            console.error(`Error deleting file ${filePath}:`, err);
+        } else {
+            console.log(`Deleted file: ${filePath}`);
+        }
+        });
+    });
+    });
+};
+
+
 setInterval(batchPing, 60000); // Ping semua alamat IPTV setiap 60 detik
 
 // Penjadwalan untuk mengirim email log setiap Senin pukul 9 pagi
-cron.schedule("0 9 * * 1", () => {
-    console.log("Sending log email every Monday at 9 AM...");
-    sendLogToEmail();
+cron.schedule("0 12 * * 0", () => {
+    console.log("Running scheduled task on Sunday at 12 PM...");
+    clearLogFolder();
 });
