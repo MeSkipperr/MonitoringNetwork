@@ -103,7 +103,7 @@ const clearLogFolder = () => {
 };
 
 
-setInterval(batchPing, 60000); // Ping semua alamat IPTV setiap 60 detik
+setInterval(batchPing, 30000); // Ping semua alamat IPTV setiap 30 detik
 
 // Penjadwalan untuk mengirim email log setiap Senin pukul 9 pagi
 cron.schedule("0 12 * * 0", () => {
