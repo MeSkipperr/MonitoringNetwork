@@ -36,8 +36,9 @@ async function pingAddress(data) {
         // Ping alamat menggunakan modul `ping`
         const res = await ping.promise.probe(data.ipAddress, { timeout: 1 });
 
+        const outputLines = res.output.split("\r\s");
         // Buat log message
-        const logMessage = `${res.alive ? `Reply from ${data.ipAddress}` : "Request timed out."
+        const logMessage = `${res.alive ? outputLines[2] : "Request timed out."
             } - ${formatDate()} - ${data.ipAddress}`;
         console.log(logMessage);
 
@@ -58,10 +59,10 @@ async function pingAddress(data) {
         );
 
         // Kirim email jika status berubah
-        if (allNoReply && shouldSendEmail(data, "error")) {
+        if (allNoReply && shouldSendEmail(data, "error") && !data.error) {
             sendErrorEmail(data); // Kirim email error
             data.error = true;
-        } else if (allSuccess && shouldSendEmail(data, "recovery")) {
+        } else if (allSuccess && shouldSendEmail(data, "recovery") && data.error) {
             sendRecoveryEmail(data); // Kirim email recovery
             data.error = false;
         }
