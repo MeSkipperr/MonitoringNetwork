@@ -38,8 +38,8 @@ async function pingAddress(data) {
 
         const outputLines = res.output.split("\r\s");
         // Buat log message
-        const logMessage = `${res.alive ? outputLines[2] : "Request timed out."
-            } - ${formatDate()} - ${data.ipAddress}`;
+        const logMessage = `${res.alive ? outputLines[2] : `${data.ipAddress} - Request timed out.`
+            } - ${formatDate()} `;
         console.log(logMessage);
 
         // Tambahkan log ke file log
@@ -104,10 +104,25 @@ const clearLogFolder = () => {
 };
 
 
-setInterval(batchPing, 30000); // Ping semua alamat IPTV setiap 30 detik
-
 // Penjadwalan untuk mengirim email log setiap Senin pukul 9 pagi
 cron.schedule("0 12 * * 0", () => {
     console.log("Running scheduled task on Sunday at 12 PM...");
     clearLogFolder();
 });
+
+cron.schedule('0 9 * * 1', () => {
+    console.log('Menjalankan perintah restart komputer...');
+
+    // Jalankan perintah restart sesuai sistem operasi
+    const command = process.platform === 'win32' ? 'shutdown /r /t 0' : 'sudo reboot';
+
+    exec(command, (error, stdout, stderr) => {
+    if (error) {
+        console.error(`Gagal menjalankan perintah restart: ${error.message}`);
+        return;
+    }
+    console.log(`Perintah restart berhasil dijalankan: ${stdout}`);
+    });
+});
+
+setInterval(batchPing, 30000); // Ping semua alamat IPTV setiap 30 detik
