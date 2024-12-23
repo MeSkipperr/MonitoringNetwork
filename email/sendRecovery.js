@@ -21,8 +21,6 @@ const transporter = nodemailer.createTransport({
 async function sendRecoveryEmail(data) {
   // Iterate through each user to send the error notification
   for (const user of recipient) {
-    // Define the path to the log file associated with the IPTV error
-    const filePath = path.join(__dirname, "log", `${data.name}.txt`);
 
     // Configure the email options
     const mailOptions = {
@@ -45,10 +43,6 @@ Inspect the details and confirm the system is back to normal.
 Best regards,  
 Courtyard by Marriott Bali Nusa Dua Resort
       `, // Email body with personalized information
-      attachments: {
-        filename: `${data.name}.txt`, // Attach the log file with the error details
-        path: filePath, // Path to the log file
-      },
     };
 
     try {
