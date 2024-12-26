@@ -34,9 +34,9 @@ Dear ${user.middleName} ${user.lastName},
 We would like to inform you that an error has occurred in the network system. Below are the details:
 
     - Time : ${formatDate()}
-    - Switch Name: ${data.name}
+    - Host Name: ${data.name}
     - IP Address: ${data.ipAddress}
-    - Switch device: ${data.device}
+    - Device: ${data.device}
     ${data.description.trim() === "" ? "" : `- Descriptions : ${data.description} `}
 
 Kindly review the information provided and take necessary actions to resolve the issue at your earliest convenience.

@@ -36,7 +36,8 @@ async function pingAddress(data) {
         // Ping alamat menggunakan modul `ping`
         const res = await ping.promise.probe(data.ipAddress, { timeout: 1 });
 
-        const outputLines = res.output.split("\r\s");
+        const outputLines = res.output.split("\r\n");
+
         // Buat log message
         const logMessage = `${res.alive ? outputLines[2] : `${data.ipAddress} - Request timed out.`
             } - ${formatDate()} `;

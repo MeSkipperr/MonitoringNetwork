@@ -33,9 +33,9 @@ Dear ${user.middleName} ${user.lastName},
 This is to notify you of a network system recovery update. Below are the recovery details:
 
     - Time : ${formatDate()}
-    - Switch Name: ${data.name}
+    - Host Name: ${data.name}
     - IP Address: ${data.ipAddress}
-    - Switch device: ${data.device}
+    - Device: ${data.device}
     ${data.description.trim() === "" ? "" : `- Descriptions : ${data.description} `}
 
 Inspect the details and confirm the system is back to normal.
