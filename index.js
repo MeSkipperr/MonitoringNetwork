@@ -3,13 +3,11 @@ const fs = require("fs"); // Untuk interaksi file sistem
 const path = require("path"); // Untuk manipulasi path file
 const cron = require("node-cron"); // Untuk penjadwalan tugas
 
-const ipTV = require("./device/ipTV");
-const cctv = require("./device/cctv");
-const accessPoint = require("./device/access_point");
-
 const sendErrorEmail = require("./email/sendErrorEmail");
 const sendRecoveryEmail = require("./email/sendRecovery");
-const formatDate = require("./timeFormat");
+const formatDate = require("./function/timeFormat");
+const readAndValidateJsonFiles = require("./function/getJsonData");
+
 
 // Cache untuk menghindari pengiriman email berulang
 const emailCooldown = new Map();
@@ -73,14 +71,27 @@ async function pingAddress(data) {
     console.error(`Ping error for ${data.name}:`, err);
   }
 }
+const allDevices = []
+let getAlldata = false;
+
+(async () => {
+  const dirPath = path.join(__dirname, 'device');
+  const allValidData = await readAndValidateJsonFiles(dirPath);
+
+  // Add the valid data to the global allDevices array
+  allDevices.push(...allValidData);
+
+  console.log('Combined Valid Data:', allValidData);
+  getAlldata = true
+})();
 
 // Batch dan interval ping
 const batchPing = async () => {
-  // console.log("Starting ping batch...");
-  const allDevices = [...cctv, ...ipTV, ...accessPoint]; // Atau gunakan cctv.concat(ipTV)
-  const pingPromises = allDevices.map(pingAddress);
-  await Promise.all(pingPromises); // Tunggu semua selesai
-  // console.log("Batch complete.");
+  if(getAlldata){
+    const pingPromises = allDevices.map(pingAddress);
+    await Promise.all(pingPromises); // Tunggu semua selesai
+    // console.log("Batch complete.");
+  }
 };
 
 const clearLogFolder = () => {
