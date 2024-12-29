@@ -1,12 +1,11 @@
 // Import necessary modules
 const nodemailer = require("nodemailer"); // To send emails
 require("dotenv").config(); // For loading environment variables from a .env file
-const path = require("path"); // For handling file paths
 
 // Import user data (list of users to send emails to)
 const recipient = require("../auth/recipient");
 const sender = require("../auth/sender");
-const formatDate = require("../timeFormat");
+const formatDate = require("../function/timeFormat");
 
 // Configure the email transporter using Gmail service
 const transporter = nodemailer.createTransport({
@@ -21,7 +20,6 @@ const transporter = nodemailer.createTransport({
 async function sendRecoveryEmail(data) {
   // Iterate through each user to send the error notification
   for (const user of recipient) {
-
     // Configure the email options
     const mailOptions = {
       from: sender.EMAIL_USER, // Sender's email (from .env)
@@ -36,7 +34,11 @@ This is to notify you of a network system recovery update. Below are the recover
     - Host Name: ${data.name}
     - IP Address: ${data.ipAddress}
     - Device: ${data.device}
-    ${data.description.trim() === "" ? "" : `- Descriptions : ${data.description} `}
+    ${
+      data.description.trim() === ""
+        ? ""
+        : `- Descriptions : ${data.description} `
+    }
 
 Inspect the details and confirm the system is back to normal.
 

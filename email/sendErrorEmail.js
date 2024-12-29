@@ -1,12 +1,11 @@
 // Import necessary modules
 const nodemailer = require("nodemailer"); // To send emails
 require("dotenv").config(); // For loading environment variables from a .env file
-const path = require("path"); // For handling file paths
 
 // Import user data (list of users to send emails to)
 const recipient = require("../auth/recipient");
 const sender = require("../auth/sender");
-const formatDate = require("../timeFormat");
+const formatDate = require("../function/timeFormat");
 
 // Configure the email transporter using Gmail service
 const transporter = nodemailer.createTransport({
@@ -37,7 +36,11 @@ We would like to inform you that an error has occurred in the network system. Be
     - Host Name: ${data.name}
     - IP Address: ${data.ipAddress}
     - Device: ${data.device}
-    ${data.description.trim() === "" ? "" : `- Descriptions : ${data.description} `}
+    ${
+      data.description.trim() === ""
+        ? ""
+        : `- Descriptions : ${data.description} `
+    }
 
 Kindly review the information provided and take necessary actions to resolve the issue at your earliest convenience.
 
