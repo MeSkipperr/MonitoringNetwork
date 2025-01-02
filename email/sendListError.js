@@ -1,0 +1,57 @@
+// Import necessary modules
+const nodemailer = require("nodemailer"); // To send emails
+require("dotenv").config(); // For loading environment variables from a .env file
+const path = require("path");
+
+// Import user data (list of users to send emails to)
+const recipient = require("../auth/recipient");
+const sender = require("../auth/sender");
+
+// Configure the email transporter using Gmail service
+const transporter = nodemailer.createTransport({
+  service: "gmail", // Using Gmail as the email service
+  auth: {
+    user: sender.EMAIL_USER,
+    pass: sender.EMAIL_PASS,
+  },
+});
+
+// Function to send an error notification email
+async function sendListError() {
+    const filePath = path.join(__dirname, "DeviceError.xlsx");
+  // Iterate through each user to send the error notification
+  for (const user of recipient) {
+    // Define the path to the log file associated with the IPTV error
+
+    // Configure the email options
+    const mailOptions = {
+        from: sender.EMAIL_USER, // Sender's email (from .env)
+        to: user.email, // Recipient's email (from the user data)
+        subject: "Notification of Network Device Status - Error Detected", // Email subject
+        text: `
+Dear ${user.middleName} ${user.lastName},
+
+Please find attached a collection of devices that still have errors detected in your system. This report provides detailed information about the affected devices for your review.
+
+Best regards,
+Courtyard by Marriott Bali Nusa Dua Resort
+            `, // Email body with personalized information
+            attachments: [
+                {
+                  filename: "DeviceError.xlsx", // Nama file dalam email
+                  path: filePath, // Path ke file
+                },  
+            ],
+    };
+
+    try {
+      // Send the email with the defined options
+        const info = await transporter.sendMail(mailOptions);
+      console.log("Email sent:", info.response); // Log success response if email is sent
+    } catch (err) {
+      console.error("Failed to send email to:", user.email, "Error:", err); // Log error if sending fails
+    }
+}
+}
+// Export the sendListError function so it can be used in other modules
+module.exports = sendListError;

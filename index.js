@@ -7,10 +7,13 @@ const sendErrorEmail = require("./email/sendErrorEmail");
 const sendRecoveryEmail = require("./email/sendRecovery");
 const formatDate = require("./function/timeFormat");
 const readAndValidateJsonFiles = require("./function/getJsonData");
+const createListError = require("./function/createListError");
+const sendListError = require("./email/sendListError");
 
 
 // Cache untuk menghindari pengiriman email berulang
 const emailCooldown = new Map();
+const unreachableDevices = [];
 
 // Helper untuk throttle email pengiriman
 function shouldSendEmail(data, type) {
@@ -61,11 +64,20 @@ async function pingAddress(data) {
 
     // Kirim email jika status berubah
     if (allNoReply && shouldSendEmail(data, "error") && !data.error) {
-      sendErrorEmail(data); // Kirim email error
+      // sendErrorEmail(data); // Kirim email error
+      console.log("send mail err")
       data.error = true;
+      if (!unreachableDevices.includes(data)) {
+        unreachableDevices.push(data); // Tambahkan ke daftar perangkat tidak terkoneksi
+      }
     } else if (allSuccess && shouldSendEmail(data, "recovery") && data.error) {
+      console.log("send mail recov")
       sendRecoveryEmail(data); // Kirim email recovery
       data.error = false;
+      const index = unreachableDevices.indexOf(data);
+        if (index !== -1) {
+          unreachableDevices.splice(index, 1);
+        }
     }
   } catch (err) {
     console.error(`Ping error for ${data.name}:`, err);
@@ -117,26 +129,35 @@ const clearLogFolder = () => {
   });
 };
 
-// Penjadwalan untuk mengirim email log setiap Senin pukul 9 pagi
-cron.schedule("0 12 * * 0", () => {
-  console.log("Running scheduled task on Sunday at 12 PM...");
+cron.schedule("0 0 1 * *", () => {
+  console.log("Running scheduled task on the 1st of the month at 12 AM...");
   clearLogFolder();
 });
 
-cron.schedule("0 9 * * 1", () => {
-  console.log("Menjalankan perintah restart komputer...");
+cron.schedule("0 9 * * 1", async () => {
+  try {
+    console.log("Generating error list Excel file...");
+    await createListError(unreachableDevices); // Buat file Excel
 
-  // Jalankan perintah restart sesuai sistem operasi
-  const command =
-    process.platform === "win32" ? "shutdown /r /t 0" : "sudo reboot";
+    console.log("Sending error list email...");
+    await sendListError(); // Kirim email
 
-  exec(command, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`Gagal menjalankan perintah restart: ${error.message}`);
-      return;
-    }
-    console.log(`Perintah restart berhasil dijalankan: ${stdout}`);
-  });
+    console.log("Email sent. Preparing to restart the computer...");
+    
+    // Jalankan perintah restart sesuai sistem operasi
+    const command =
+      process.platform === "win32" ? "shutdown /r /t 0" : "sudo reboot";
+
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Failed to execute restart command: ${error.message}`);
+        return;
+      }
+      console.log(`Restart command executed successfully: ${stdout}`);
+    });
+  } catch (error) {
+    console.error("An error occurred during the scheduled task:", error);
+  }
 });
 
 setInterval(batchPing, 30000); // Ping semua alamat IPTV setiap 30 detik
