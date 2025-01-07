@@ -1,11 +1,12 @@
 const { Client } = require('ssh2');
 const fs = require('fs');
+const path = require('path');
 
 const readAndValidateJsonFiles = require("../getJsonData")
 
 // SSH credentials
-const sshUsername = 'admin'; // Replace with the appropriate username
-const sshPassword = 'DPSCYadmin*1'; // Replace with the appropriate password
+const sshUsername = ''; // Replace with the appropriate username
+const sshPassword = ''; // Replace with the appropriate password
 
 /**
  * Fetch system information from devices and write the output to a file.
@@ -13,7 +14,7 @@ const sshPassword = 'DPSCYadmin*1'; // Replace with the appropriate password
  * @param {Array} commandList - Array of commands specific to device types.
  * @param {string} fileName - The file name to save the output. Defaults to 'environment_info.txt'.
  */
-const fetchSystemInformation = async (devices, fileName = 'environment_info.txt') => {
+const fetchSystemInformation = async (devices, fileName = 'Device _Information_txt') => {
     // Clear the file content if it already exists
     if (fs.existsSync(fileName)) {
         fs.writeFileSync(fileName, ''); // Clear file content
