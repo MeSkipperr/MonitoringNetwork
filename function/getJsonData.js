@@ -1,7 +1,13 @@
 const fs = require('fs');
 const path = require('path');
 
-async function readAndValidateJsonFiles(dirPath) {
+/**
+ * Reads and validates JSON files in a directory with flexible array contents.
+ * @param {string} dirPath - The directory path containing JSON files.
+ * @param {Object} schema - An object defining the expected structure and types.
+ * @returns {Promise<Array>} An array of validated data objects.
+ */
+async function readAndValidateJsonFiles(dirPath, schema) {
     const validData = [];
 
     try {
@@ -20,16 +26,18 @@ async function readAndValidateJsonFiles(dirPath) {
                 const fileContent = fs.readFileSync(filePath, 'utf-8');
                 const data = JSON.parse(fileContent);
 
-                // Validate format
+                // Validate format using the provided schema
                 if (
                     Array.isArray(data) &&
                     data.every(item =>
                         item &&
-                        typeof item.name === 'string' &&
-                        typeof item.ipAddress === 'string' &&
-                        typeof item.device === 'string' &&
-                        typeof item.error === 'boolean' &&
-                        typeof item.description === 'string'
+                        Object.entries(schema).every(([key, type]) => {
+                            if (type === 'array') {
+                                // If it's an array, check if it's an array, but don't validate the elements inside
+                                return Array.isArray(item[key]);
+                            }
+                            return typeof item[key] === type;
+                        })
                     )
                 ) {
                     validData.push(...data);
