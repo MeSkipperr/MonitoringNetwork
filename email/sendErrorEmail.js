@@ -1,9 +1,8 @@
 // Import necessary modules
-const nodemailer = require("nodemailer"); // To send emails
-require("dotenv").config(); // For loading environment variables from a .env file
+const nodemailer = require("nodemailer"); // Module to send emails
 
 // Import user data (list of users to send emails to)
-const recipient = require("../auth/recipient");
+const adminUser = require("../auth/admin");
 const sender = require("../auth/sender");
 const formatDate = require("../function/timeFormat");
 
@@ -11,42 +10,48 @@ const formatDate = require("../function/timeFormat");
 const transporter = nodemailer.createTransport({
   service: "gmail", // Using Gmail as the email service
   auth: {
-    user: sender.EMAIL_USER,
-    pass: sender.EMAIL_PASS,
+    user: sender.EMAIL_USER, 
+    pass: sender.EMAIL_PASS, 
   },
 });
 
-// Function to send an error notification email
-async function sendErrorEmail(data) {
+// Function to send an error notification email to system admins
+async function sendErrorSystemAdmin(error) {
+  const errorDetails = {
+    message: error.message || "An unknown error occurred.", // Error message
+    name: error.name || "UnknownError", // Error type (e.g., TypeError, ReferenceError)
+    stack: error.stack || "No stack trace available.", // Stack trace to help trace the source of the error
+    code: error.code || "No error code",  // Many errors have a code (e.g., DB_ERROR)
+    cause: error.cause || "No cause provided",  // Further cause if available
+    timestamp: formatDate(),  // Timestamp of when the error occurred
+    additionalInfo: error.additionalInfo || "No additional information", // Additional information if any
+  };
+
   // Iterate through each user to send the error notification
-  for (const user of recipient) {
-    // Define the path to the log file associated with the IPTV error
+  for (const user of adminUser) {
+    // Define the path to the log file associated with the IPTV error (if any)
 
     // Configure the email options
     const mailOptions = {
-      from: sender.EMAIL_USER, // Sender's email (from .env)
-      to: user.email, // Recipient's email (from the user data)
-      subject: "Device Ping Error Notification", // Email subject
+      from: sender.EMAIL_USER, 
+      to: user.email, // Recipient's email (from user data)
+      subject: "System Error Notification", // Email subject
       text: `
 Dear ${user.middleName} ${user.lastName},
 
-We would like to inform you that an error has occurred in the network system. Below are the details:
+An error has occurred in the system. Below are the details of the error:
 
-    - Time : ${formatDate()}
-    - Host Name: ${data.name}
-    - IP Address: ${data.ipAddress}
-    - Device: ${data.device}
-    ${
-      data.description.trim() === ""
-        ? ""
-        : `- Descriptions : ${data.description} `
-    }
+Error Message: ${errorDetails.message} // Description of the error
+Error Type: ${errorDetails.name} // Type of the error (e.g., TypeError, ReferenceError)
+Timestamp: ${errorDetails.timestamp} // When the error occurred
+Stack Trace: ${errorDetails.stack} // Stack trace for debugging
+Cause: ${errorDetails.cause} // Cause of the error, if available
+Additional Information: ${errorDetails.additionalInfo} // Additional details if available
 
-Kindly review the information provided and take necessary actions to resolve the issue at your earliest convenience.
+Please review the error and take appropriate action.
 
 Best regards,
-Courtyard by Marriott Bali Nusa Dua Resort
-            `, // Email body with personalized information
+            `, // Email body with personalized error information
     };
 
     try {
@@ -58,5 +63,5 @@ Courtyard by Marriott Bali Nusa Dua Resort
     }
   }
 }
-// Export the sendErrorEmail function so it can be used in other modules
-module.exports = sendErrorEmail;
+// Export the sendErrorSystemAdmin function so it can be used in other modules
+module.exports = sendErrorSystemAdmin;

@@ -1,10 +1,10 @@
 [
     {
-        "device":"Aruba 6100 24G 4SFP Switch",
-        "userName":"admin",
-        "password":"DPSCYadmin*1",
+        "device":"",
+        "userName":"",
+        "password":"",
         "command":[
-            "show environment"
+            ""
         ]
     }
 ]

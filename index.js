@@ -107,15 +107,26 @@ let getAlldata = false;
 
   console.log("Combined Valid Data:", allValidData);
   getAlldata = true;
+  if (getAlldata) {
+    const pingPromises = allDevices.map(pingAddress);
+    await Promise.all(pingPromises); // Wait for all pings to complete
+  }
+
+  console.log("Generating error list Excel file...");
+  await createListError(unreachableDevices); // Create Excel file with errors
+
+  console.log("Sending error list email...");
+  await sendListError(); // Send the error list email
+
+  await sendSystemInformation();
 })();
 
 // Batch pinging of devices
 const batchPing = async () => {
-  // if (getAlldata) {
-  //   const pingPromises = allDevices.map(pingAddress);
-  //   await Promise.all(pingPromises); // Wait for all pings to complete
-  // }
-  getSystemInformation(allDevices);
+  if (getAlldata) {
+    const pingPromises = allDevices.map(pingAddress);
+    await Promise.all(pingPromises); // Wait for all pings to complete
+  }
   console.log("Batch pinging complete.");
 };
 
@@ -157,6 +168,8 @@ cron.schedule("0 9 * * 1", async () => {
 
     console.log("Sending error list email...");
     await sendListError(); // Send the error list email
+
+    await sendSystemInformation();
 
     console.log("Email sent. Preparing to restart the computer...");
 
