@@ -12,6 +12,8 @@ const createListError = require("./function/createListError"); // Function to ge
 const sendListError = require("./email/sendListError"); // Function to send an email with the list of errors
 
 const getSystemInformation = require("./function/getSystemInformation"); // Function to get system information
+const sendSystemInformation = require("./email/sendSystemInformation");
+const sendErrorSystemAdmin = require("./email/sendErrorToAdmin");
 
 // Cache to prevent repeated email notifications
 const emailCooldown = new Map();
@@ -83,6 +85,7 @@ async function pingAddress(data) {
     }
   } catch (err) {
     console.error(`Ping error for ${data.name}:`, err);
+    sendErrorSystemAdmin(err);
   }
 }
 
@@ -117,7 +120,7 @@ let getAlldata = false;
 
   console.log("Sending error list email...");
   await sendListError(); // Send the error list email
-
+  await getSystemInformation(allDevices);
   await sendSystemInformation();
 })();
 
