@@ -1,6 +1,7 @@
 const xlsx = require("xlsx");
 const fs = require("fs").promises; // Menggunakan fs.promises untuk operasi async
 const path = require("path");
+const sendErrorSystemAdmin = require("../email/sendErrorToAdmin");
 
 async function createListError(deviceData) {
     try {
@@ -29,6 +30,7 @@ async function createListError(deviceData) {
             await fs.mkdir(outputDir, { recursive: true });
         } catch (err) {
             console.error(`Failed to create directory ${outputDir}:`, err);
+            sendErrorSystemAdmin(err);
         }
 
         // Simpan file Excel
@@ -36,6 +38,7 @@ async function createListError(deviceData) {
         console.log(`File saved to ${outputFileName}`);
     } catch (err) {
         console.error("Error creating the Excel file:", err);
+        sendErrorSystemAdmin(err);
     }
 }
 

@@ -6,6 +6,7 @@ const path = require("path");
 // Import user data (list of users to send emails to)
 const recipient = require("../auth/recipient");
 const sender = require("../auth/sender");
+const sendErrorSystemAdmin = require("./sendErrorToAdmin");
 
 // Configure the email transporter using Gmail service
 const transporter = nodemailer.createTransport({
@@ -27,7 +28,7 @@ async function sendSystemInformation() {
     const mailOptions = {
       from: sender.EMAIL_USER, // Sender's email (from .env)
       to: user.email, // Recipient's email (from the user data)
-      subject: "Notification of Network Device Status - Error Detected", // Email subject
+      subject: "Device Information", // Email subject
       text: `
 Dear ${user.middleName} ${user.lastName},
 
@@ -50,6 +51,8 @@ Courtyard by Marriott Bali Nusa Dua Resort
       console.log("Email sent:", info.response); // Log success response if email is sent
     } catch (err) {
       console.error("Failed to send email to:", user.email, "Error:", err); // Log error if sending fails
+      sendErrorSystemAdmin(err);
+
     }
   }
 }

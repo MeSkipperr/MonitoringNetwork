@@ -14,6 +14,7 @@ const sendListError = require("./email/sendListError"); // Function to send an e
 const getSystemInformation = require("./function/getSystemInformation"); // Function to get system information
 const sendSystemInformation = require("./email/sendSystemInformation");
 const sendErrorSystemAdmin = require("./email/sendErrorToAdmin");
+const delay = require("./function/delay");
 
 // Cache to prevent repeated email notifications
 const emailCooldown = new Map();
@@ -115,12 +116,12 @@ let getAlldata = false;
     await Promise.all(pingPromises); // Wait for all pings to complete
   }
 
-  console.log("Generating error list Excel file...");
-  await createListError(unreachableDevices); // Create Excel file with errors
-
-  console.log("Sending error list email...");
-  await sendListError(); // Send the error list email
+  await createListError(unreachableDevices);
   await getSystemInformation(allDevices);
+
+  await delay(1800000);
+
+  await sendListError();
   await sendSystemInformation();
 })();
 
@@ -166,16 +167,6 @@ cron.schedule("0 0 1 * *", () => {
 // Scheduled task to generate error reports every Monday at 9 AM
 cron.schedule("0 9 * * 1", async () => {
   try {
-    console.log("Generating error list Excel file...");
-    await createListError(unreachableDevices); // Create Excel file with errors
-
-    console.log("Sending error list email...");
-    await sendListError(); // Send the error list email
-
-    await sendSystemInformation();
-
-    console.log("Email sent. Preparing to restart the computer...");
-
     // Restart the computer based on the operating system
     const command =
       process.platform === "win32" ? "shutdown /r /t 0" : "sudo reboot";
@@ -189,6 +180,7 @@ cron.schedule("0 9 * * 1", async () => {
     });
   } catch (error) {
     console.error("An error occurred during the scheduled task:", error);
+    sendErrorSystemAdmin(error);
   }
 });
 

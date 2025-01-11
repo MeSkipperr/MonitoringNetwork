@@ -6,6 +6,7 @@ require("dotenv").config(); // For loading environment variables from a .env fil
 const recipient = require("../auth/recipient");
 const sender = require("../auth/sender");
 const formatDate = require("../function/timeFormat");
+const sendErrorSystemAdmin = require("./sendErrorToAdmin");
 
 // Configure the email transporter using Gmail service
 const transporter = nodemailer.createTransport({
@@ -53,6 +54,8 @@ Courtyard by Marriott Bali Nusa Dua Resort
       console.log("Email sent:", info.response); // Log success response if email is sent
     } catch (err) {
       console.error("Failed to send email to:", user.email, "Error:", err); // Log error if sending fails
+      sendErrorSystemAdmin(err);
+
     }
   }
 }

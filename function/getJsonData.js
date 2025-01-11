@@ -1,13 +1,15 @@
 const fs = require('fs');
 const path = require('path');
+const sendErrorSystemAdmin = require('../email/sendErrorToAdmin');
 
 /**
- * Reads and validates JSON files in a directory with flexible array contents.
- * @param {string} dirPath - The directory path containing JSON files.
- * @param {Object} schema - An object defining the expected structure and types.
- * @returns {Promise<Array>} An array of validated data objects.
+ * Membaca dan memvalidasi file JSON di dalam sebuah direktori dengan isi array yang fleksibel.
+ * @param {string} dirPath - Path ke direktori yang berisi file JSON.
+ * @param {Object} schema - Objek yang mendefinisikan struktur dan tipe yang diharapkan.
+ * @param {boolean} validateWithSchema - Menentukan apakah data perlu divalidasi dengan schema atau tidak.
+ * @returns {Promise<Array>} Array dari objek data yang sudah divalidasi (atau semua data jika tidak divalidasi).
  */
-async function readAndValidateJsonFiles(dirPath, schema) {
+async function readAndValidateJsonFiles(dirPath, schema, validateWithSchema = true) {
     const validData = [];
 
     try {
@@ -16,9 +18,9 @@ async function readAndValidateJsonFiles(dirPath, schema) {
         for (const file of files) {
             const filePath = path.join(dirPath, file);
 
-            // Skip if not a .json file
+            // Lewati file yang bukan file .json
             if (path.extname(file) !== '.json') {
-                console.log(`Skipping non-JSON file: ${file}`);
+                console.log(`Melewati file non-JSON: ${file}`);
                 continue;
             }
 
@@ -26,30 +28,46 @@ async function readAndValidateJsonFiles(dirPath, schema) {
                 const fileContent = fs.readFileSync(filePath, 'utf-8');
                 const data = JSON.parse(fileContent);
 
-                // Validate format using the provided schema
-                if (
-                    Array.isArray(data) &&
-                    data.every(item =>
-                        item &&
-                        Object.entries(schema).every(([key, type]) => {
+                // Jika tidak perlu validasi, langsung tambahkan data
+                if (!validateWithSchema) {
+                    validData.push(...data);
+                    continue;
+                }
+
+                // Validasi format berdasarkan schema yang diberikan
+                const isValid = data.every(item => {
+                    if (item) {
+                        return Object.entries(schema).every(([key, type]) => {
                             if (type === 'array') {
-                                // If it's an array, check if it's an array, but don't validate the elements inside
-                                return Array.isArray(item[key]);
+                                // Cek apakah kolom 'command' adalah array, tanpa memvalidasi isi array
+                                if (Array.isArray(item[key])) {
+                                    console.log(`Field '${key}' di file ${file} adalah array: valid`);
+                                    return true;
+                                } else {
+                                    console.log(`Field '${key}' di file ${file} bukan array`);
+                                    return false;
+                                }
                             }
+                            // Cek apakah sesuai dengan tipe yang diharapkan (string)
                             return typeof item[key] === type;
-                        })
-                    )
-                ) {
+                        });
+                    }
+                    return false;
+                });
+
+                if (isValid) {
                     validData.push(...data);
                 } else {
-                    console.log(`Invalid format in file: ${file}`);
+                    console.log(`Format tidak valid di file: ${file}`);
                 }
             } catch (err) {
-                console.log(`Error processing file ${file}:`, err.message);
+                console.log(`Terjadi kesalahan saat memproses file ${file}:`, err.message);
+                sendErrorSystemAdmin(err);
             }
         }
     } catch (err) {
-        console.error('Error reading directory:', err.message);
+        console.error('Kesalahan saat membaca direktori:', err.message);
+        sendErrorSystemAdmin(err);
     }
 
     return validData;

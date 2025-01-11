@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const readAndValidateJsonFiles = require("../getJsonData");
+const sendErrorSystemAdmin = require('../../email/sendErrorToAdmin');
 
 // SSH credentials
 const sshUsername = ''; // Replace with the appropriate SSH username
@@ -17,6 +18,7 @@ const sshPassword = ''; // Replace with the appropriate SSH password
 const fetchSystemInformation = async (devices, fileName = 'Device_Information.txt') => {
     // Path to save the output file
     const filePath = path.join(__dirname, '../../email', fileName);
+    console.log("Device_Information_txt at ", filePath)
 
     // Clear the file content if the file already exists
     if (fs.existsSync(filePath)) {
@@ -34,7 +36,7 @@ const fetchSystemInformation = async (devices, fileName = 'Device_Information.tx
 
     // Path to the directory where the command JSON files are located
     const dirPath = path.join(__dirname, 'command');
-    const commandList = await readAndValidateJsonFiles(dirPath, schema);
+    const commandList = await readAndValidateJsonFiles(dirPath, schema, false);
 
     /**
      * Execute an SSH command on a device.
@@ -97,6 +99,7 @@ const fetchSystemInformation = async (devices, fileName = 'Device_Information.tx
                     conn.end();
                 } catch (err) {
                     console.error(`Error during command execution for ${device.name}:`, err);
+                    sendErrorSystemAdmin(err);
                     // Log error to the file
                     const errorLog = `\n\nDevice: ${device.name} (${device.device})\nIP Address: ${device.ipAddress}\nERROR : ${err}\n`;
                     fs.appendFile(filePath, errorLog, (err) => {
